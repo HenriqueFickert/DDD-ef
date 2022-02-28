@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Empresa.Projeto.Application.Dtos.Paginacao;
+using Empresa.Projeto.Domain.Pagination;
 using Empresa.Projeto.Application.Dtos.Permissao;
 using Empresa.Projeto.Application.Interfaces;
 using Empresa.Projeto.Application.Structs;
 using Empresa.Projeto.Domain.Core.Interfaces.Services;
 using Empresa.Projeto.Domain.Entitys;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Empresa.Projeto.Application.Dtos;
 
 namespace Empresa.Projeto.Application
 {
@@ -22,12 +22,18 @@ namespace Empresa.Projeto.Application
             this.servicePermissao = servicePermissao;
         }
 
-        public async Task<PermissaoPagination> GetPaginationAsync(int pageNumber, int resultSize)
+        public async Task<ViewPagedListDto<Permissao, ViewPermissaoDto>> GetPaginationAsync(ParametersBase parametersBase)
         {
-            PermissaoPagination pagination = new PermissaoPagination();
-            pagination.SetValues(await servicePermissao.GetCountAsync(), resultSize, pageNumber);
-            pagination.Permissoes = mapper.Map<List<ViewPermissaoDto>>(await servicePermissao.GetPaginationAsync(pagination.PaginaAtual, pagination.ResultadosExibidos));
-            return pagination;
+            PagedList<Permissao> pagedList = await servicePermissao.GetPaginationAsync(parametersBase);
+
+            ViewPagedListDto<Permissao, ViewPermissaoDto> retorno = new ViewPagedListDto<Permissao, ViewPermissaoDto>(pagedList);
+
+            foreach (Permissao permissaoItem in pagedList)
+            {
+                retorno.Pagina.Add(mapper.Map<ViewPermissaoDto>(permissaoItem));
+            }
+
+            return retorno;
         }
 
         public async Task<ViewPermissaoUsuarioDto> GetByIdDetalhesAsync(long id)
